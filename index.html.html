@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ALMAtech — Gestione Commesse Magazzino</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:linear-gradient(135deg,#F0F7FF 0%,#E8F0FE 50%,#F5F8FF 100%);color:#1E293B;min-height:100vh;-webkit-tap-highlight-color:transparent}
+  .header{background:rgba(255,255,255,0.85);border-bottom:1px solid rgba(148,163,184,0.2);padding:12px 20px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .logo-area{display:flex;align-items:center;gap:14px}
+  .logo-alma{font-size:22px;font-weight:800;color:#0091EA;letter-spacing:-0.03em}
+  .logo-tech{font-size:22px;font-weight:800;color:#90A4AE;letter-spacing:-0.03em}
+  .logo-sep{width:1px;height:28px;background:rgba(148,163,184,0.25)}
+  .logo-sub p:first-child{font-size:13px;font-weight:600;color:#546E7A}
+  .logo-sub p:last-child{font-size:10px;color:#90A4AE}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .filters{display:flex;gap:3px;background:rgba(226,235,248,0.7);border-radius:8px;padding:3px}
+  .filter-btn{border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;background:transparent;color:#78909C;transition:all 0.2s}
+  .filter-btn.active{color:#fff}
+  .btn-new{border:none;cursor:pointer;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,0.25);transition:all 0.2s}
+  .btn-new:active{transform:scale(0.97)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .sync-ok{background:#10B981;box-shadow:0 0 6px #10B98144}
+  .sync-loading{background:#F59E0B;animation:pulse 1s infinite}
+  .sync-error{background:#EF4444}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .sync-bar{font-size:10px;color:#78909C;display:flex;align-items:center;padding:4px 12px;background:rgba(226,235,248,0.6);border-radius:6px;cursor:pointer}
+  .admin-badge{font-size:10px;color:#fff;background:#0091EA;padding:3px 8px;border-radius:5px;font-weight:600;cursor:pointer}
+  .login-badge{font-size:10px;color:#78909C;background:rgba(226,235,248,0.6);padding:3px 8px;border-radius:5px;font-weight:600;cursor:pointer;border:1px solid rgba(148,163,184,0.2)}
+  .columns{max-width:1200px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.columns{grid-template-columns:1fr}}
+  .column{background:rgba(255,255,255,0.6);border:1.5px solid rgba(148,163,184,0.12);border-radius:16px;padding:16px;min-height:400px;transition:all 0.3s ease;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+  .column.drag-over-col{background:rgba(245,158,11,0.06);border:2px dashed #F59E0B}
+  .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px}
+  .col-avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff}
+  .col-avatar.leandro{background:linear-gradient(135deg,#6366F1,#8B5CF6)}
+  .col-avatar.andrea{background:linear-gradient(135deg,#0091EA,#2196F3)}
+  .col-info h2{font-size:16px;font-weight:700;color:#1E293B}
+  .col-info p{font-size:11px;color:#90A4AE}
+  .col-left{display:flex;align-items:center;gap:10px}
+  .badges{display:flex;gap:6px}
+  .badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:700;padding:0 6px}
+  .cards{display:flex;flex-direction:column;gap:8px;min-height:40px}
+  .empty-col{text-align:center;padding:40px 20px;color:#B0BEC5;font-size:13px}
+  .card{background:#fff;border:1px solid rgba(148,163,184,0.1);border-radius:12px;padding:14px;cursor:default;transition:all 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+  .card.admin-card{cursor:grab}
+  .card.dragging{opacity:0.4;background:#FFF8E1;border-color:#F59E0B44;transform:scale(0.98)}
+  .card.drag-above{border-top:3px solid #0091EA;margin-top:-2px}
+  .card.drag-below{border-bottom:3px solid #0091EA;margin-bottom:-2px}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+  .card-desc{font-size:14px;font-weight:500;line-height:1.4;flex:1;color:#1E293B}
+  .card-actions{display:flex;gap:4px;flex-shrink:0}
+  .btn-icon{border:none;cursor:pointer;background:rgba(226,235,248,0.6);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#78909C;transition:background 0.15s}
+  .btn-icon:hover{background:rgba(226,235,248,1)}
+  .btn-icon.confirm-del{background:rgba(239,68,68,0.12);font-size:10px;font-weight:700;color:#EF4444;font-family:inherit}
+  .note-block{margin-bottom:10px;padding:7px 10px;border-radius:8px;background:rgba(226,235,248,0.4);cursor:pointer;border:1px solid rgba(148,163,184,0.08)}
+  .note-header{display:flex;align-items:center;gap:6px}
+  .note-label{font-size:11px;color:#78909C;font-weight:600}
+  .note-toggle{font-size:10px;color:#B0BEC5;margin-left:auto}
+  .note-text{margin:4px 0 0;font-size:12px;color:#546E7A;line-height:1.5;white-space:pre-wrap}
+  .card-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .status-btns{display:flex;gap:3px}
+  .status-btn{border:none;cursor:pointer;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;font-family:inherit;background:rgba(226,235,248,0.5);color:#90A4AE;transition:all 0.15s}
+  .status-btn.active{color:#fff}
+  .move-btn{border:none;cursor:pointer;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:600;font-family:inherit;background:rgba(226,235,248,0.5);color:#78909C;display:flex;align-items:center;gap:4px}
+  .card-time{margin:8px 0 0;font-size:10px;color:#B0BEC5;font-family:'JetBrains Mono',monospace}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal{background:#fff;border:1px solid rgba(148,163,184,0.15);border-radius:16px;padding:24px;width:100%;max-width:420px;box-shadow:0 24px 48px rgba(0,0,0,0.12)}
+  .modal h3{margin:0 0 20px;font-size:18px;font-weight:700;color:#1E293B}
+  .form-group{margin-bottom:14px}
+  .form-label{display:block;font-size:12px;font-weight:600;color:#546E7A;margin-bottom:6px}
+  .form-label-opt{font-weight:400;color:#B0BEC5}
+  textarea.form-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(148,163,184,0.25);background:#F8FAFC;color:#1E293B;font-size:14px;font-family:inherit;resize:vertical;outline:none}
+  textarea.form-input-note{background:#FAFBFC;color:#546E7A;font-size:13px}
+  textarea.form-input:focus{border-color:#0091EA88;box-shadow:0 0 0 3px rgba(0,145,234,0.08)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .assign-btns,.stato-btns{display:flex;gap:6px}
+  .assign-btn,.stato-btn-form{flex:1;border:none;cursor:pointer;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:rgba(226,235,248,0.5);color:#90A4AE;transition:all 0.2s}
+  .stato-btn-form{font-size:10px;padding:8px 4px}
+  .assign-btn.active{color:#fff}
+  .assign-btn.active.leandro{background:linear-gradient(135deg,#6366F1,#8B5CF6)}
+  .assign-btn.active.andrea{background:linear-gradient(135deg,#0091EA,#2196F3)}
+  .stato-btn-form.active{color:#fff}
+  .modal-actions{display:flex;gap:8px}
+  .btn-cancel{flex:1;border:1px solid rgba(148,163,184,0.2);cursor:pointer;padding:10px;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;background:transparent;color:#90A4AE}
+  .btn-submit{flex:1;border:none;cursor:pointer;padding:10px;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;transition:all 0.2s}
+  .btn-submit:disabled{background:rgba(148,163,184,0.15);color:#B0BEC5;cursor:not-allowed}
+  .pw-input{width:100%;padding:10px 14px;border-radius:10px;margin-bottom:12px;border:1px solid rgba(148,163,184,0.25);background:#F8FAFC;color:#1E293B;font-size:14px;font-family:inherit;outline:none}
+  .pw-input:focus{border-color:#0091EA88;box-shadow:0 0 0 3px rgba(0,145,234,0.08)}
+  .pw-error{color:#EF4444;font-size:12px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const JSONBIN_API_KEY='$2a$10$PSDa.UDyYUdLIuiwEJ4AIuGeKsdmgZN70PiiTeUDGhdLP4vqqdize';
+const JSONBIN_BIN_ID='69c4ecdcaa77b81da91ef8b8';
+const ADMIN_PASSWORD='Alma';
+
+let commesse=[], syncStatus='loading', isAdmin=false;
+const LOCAL_KEY='almatech-commesse-local', ADMIN_KEY='almatech-admin';
+try{if(localStorage.getItem(ADMIN_KEY)==='1')isAdmin=true;}catch(e){}
+
+async function loadFromCloud(){
+  syncStatus='loading';render();
+  try{
+    const r=await fetch('https://api.jsonbin.io/v3/b/'+JSONBIN_BIN_ID+'/latest',{headers:{'X-Master-Key':JSONBIN_API_KEY}});
+    if(!r.ok)throw new Error('Fetch failed');
+    const data=await r.json(),rec=data.record;
+    commesse=Array.isArray(rec)?rec:(Array.isArray(rec.commesse)?rec.commesse:[]);
+    localStorage.setItem(LOCAL_KEY,JSON.stringify(commesse));syncStatus='ok';
+  }catch(e){
+    try{const d=localStorage.getItem(LOCAL_KEY);if(d)commesse=JSON.parse(d);}catch(x){}
+    syncStatus='error';
+  }
+  render();
+}
+async function saveToCloud(){
+  localStorage.setItem(LOCAL_KEY,JSON.stringify(commesse));syncStatus='loading';render();
+  try{
+    const r=await fetch('https://api.jsonbin.io/v3/b/'+JSONBIN_BIN_ID,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY},body:JSON.stringify({commesse:commesse})});
+    if(!r.ok)throw new Error('Save failed');syncStatus='ok';
+  }catch(e){syncStatus='error';}
+  render();
+}
+setInterval(loadFromCloud,15000);
+
+function playChime(){
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const tone=(f,s,d,v=0.15)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(f,ctx.currentTime+s);g.gain.setValueAtTime(v,ctx.currentTime+s);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+s+d);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+s);o.stop(ctx.currentTime+s+d);};tone(587,0,0.2,0.2);tone(740,0.12,0.2,0.18);tone(880,0.24,0.35,0.15);}catch(e){}
+}
+
+let showForm=false,showPwModal=false,editingId=null,filterStato='ALL',confirmDelete=null,expandedNote=null,pwError='';
+let formData={descrizione:'',operatore:'Leandro',stato:'TODO',note:''};
+const STATI={TODO:{label:'Da fare',color:'#F59E0B'},PROGRESS:{label:'In corso',color:'#3B82F6'},DONE:{label:'Completato',color:'#10B981'}};
+const OPS=['Leandro','Andrea'];
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+// =============================================
+// DRAG & DROP
+// =============================================
+let dragId=null, dragFromOp=null, dropTargetId=null, dropPosition=null, dropTargetOp=null;
+
+function onCardDragStart(e,id,op){
+  if(!isAdmin){e.preventDefault();return;}
+  dragId=id; dragFromOp=op;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',id);
+  requestAnimationFrame(()=>{const el=document.getElementById('card-'+id);if(el)el.classList.add('dragging');});
+}
+
+function onCardDragEnd(e){
+  // Execute the drop
+  if(dragId && isAdmin){
+    if(dropTargetId && dropTargetId !== dragId){
+      // Reorder within or across columns
+      const dragItem = commesse.find(c=>c.id===dragId);
+      if(!dragItem) { resetDrag(); return; }
+      
+      // Remove from current position
+      commesse = commesse.filter(c=>c.id!==dragId);
+      
+      // Find target index
+      const targetOp = commesse.find(c=>c.id===dropTargetId)?.operatore || dragFromOp;
+      dragItem.operatore = targetOp;
+      
+      const targetIdx = commesse.findIndex(c=>c.id===dropTargetId);
+      const insertIdx = dropPosition==='below' ? targetIdx+1 : targetIdx;
+      commesse.splice(insertIdx, 0, dragItem);
+      saveToCloud();
+    } else if(dropTargetOp && dropTargetOp !== dragFromOp && !dropTargetId){
+      // Dropped on empty column area
+      const dragItem = commesse.find(c=>c.id===dragId);
+      if(dragItem){
+        dragItem.operatore = dropTargetOp;
+        saveToCloud();
+      }
+    }
+  }
+  resetDrag();
+}
+
+function resetDrag(){
+  dragId=null;dragFromOp=null;dropTargetId=null;dropPosition=null;dropTargetOp=null;
+  document.querySelectorAll('.dragging,.drag-above,.drag-below,.drag-over-col').forEach(el=>{
+    el.classList.remove('dragging','drag-above','drag-below','drag-over-col');
+  });
+}
+
+function onCardDragOver(e,id){
+  e.preventDefault();e.stopPropagation();
+  if(!isAdmin||id===dragId)return;
+  e.dataTransfer.dropEffect='move';
+  
+  const rect=e.currentTarget.getBoundingClientRect();
+  const midY=rect.top+rect.height/2;
+  const pos=e.clientY<midY?'above':'below';
+  
+  if(dropTargetId!==id||dropPosition!==pos){
+    document.querySelectorAll('.drag-above,.drag-below').forEach(el=>el.classList.remove('drag-above','drag-below'));
+    dropTargetId=id; dropPosition=pos;
+    e.currentTarget.classList.add(pos==='above'?'drag-above':'drag-below');
+  }
+}
+
+function onCardDragLeave(e,id){
+  if(dropTargetId===id){
+    e.currentTarget.classList.remove('drag-above','drag-below');
+  }
+}
+
+function onColDragOver(e){e.preventDefault();if(isAdmin)e.dataTransfer.dropEffect='move';}
+function onColDragEnter(e,op){
+  e.preventDefault();
+  if(!isAdmin)return;
+  dropTargetOp=op;
+  document.querySelectorAll('.column').forEach(el=>el.classList.remove('drag-over-col'));
+  e.currentTarget.classList.add('drag-over-col');
+}
+function onColDrop(e,op){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over-col');
+  // The actual move happens in onCardDragEnd
+}
+
+// =============================================
+// ACTIONS
+// =============================================
+function tryLogin(){
+  const pw=document.getElementById('pw-input').value;
+  if(pw===ADMIN_PASSWORD){isAdmin=true;showPwModal=false;pwError='';localStorage.setItem(ADMIN_KEY,'1');render();}
+  else{pwError='Password errata';render();setTimeout(()=>{const el=document.getElementById('pw-input');if(el)el.focus();},50);}
+}
+function logout(){isAdmin=false;localStorage.removeItem(ADMIN_KEY);render();}
+
+function addCommessa(){
+  if(!isAdmin)return;
+  const desc=document.getElementById('f-desc').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+  if(!desc)return;
+  formData.descrizione=desc;formData.note=note;
+  const now=new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if(editingId){
+    commesse=commesse.map(c=>c.id===editingId?{...c,descrizione:formData.descrizione,operatore:formData.operatore,stato:formData.stato,note:formData.note}:c);
+    editingId=null;
+  }else{
+    // Add to beginning of that operator's list
+    const opItems=commesse.filter(c=>c.operatore===formData.operatore);
+    const otherItems=commesse.filter(c=>c.operatore!==formData.operatore);
+    const newItem={id:genId(),descrizione:formData.descrizione,operatore:formData.operatore,stato:formData.stato,note:formData.note,creata:now};
+    commesse=[newItem,...opItems,...otherItems];
+    // Actually, keep original order but prepend new
+    commesse=[];
+    let added=false;
+    const orig=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+    // Simpler: just push and it goes to the end
+    commesse=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+    commesse.push(newItem);
+    playChime();
+  }
+  formData={descrizione:'',operatore:'Leandro',stato:'TODO',note:''};
+  showForm=false;saveToCloud();
+}
+function deleteItem(id){if(!isAdmin)return;commesse=commesse.filter(c=>c.id!==id);confirmDelete=null;saveToCloud();}
+function changeStato(id,s){commesse=commesse.map(c=>c.id===id?{...c,stato:s}:c);saveToCloud();}
+function moveTo(id,op){if(!isAdmin)return;commesse=commesse.map(c=>c.id===id?{...c,operatore:op}:c);saveToCloud();}
+
+function startEdit(id){
+  if(!isAdmin)return;
+  const c=commesse.find(x=>x.id===id);if(!c)return;
+  formData={descrizione:c.descrizione,operatore:c.operatore,stato:c.stato,note:c.note||''};
+  editingId=id;showForm=true;render();
+}
+
+// =============================================
+// RENDER
+// =============================================
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function render(){
+  const app=document.getElementById('app');
+  const getItems=(op)=>{let f=commesse.filter(c=>c.operatore===op);if(filterStato!=='ALL')f=f.filter(c=>c.stato===filterStato);return f;};
+  const countBy=(op,s)=>commesse.filter(c=>c.operatore===op&&c.stato===s).length;
+
+  app.innerHTML=`
+    <div class="header">
+      <div class="header-inner">
+        <div class="logo-area">
+          <div><span class="logo-alma">ALMA</span><span class="logo-tech">tech</span></div>
+          <div class="logo-sep"></div>
+          <div class="logo-sub"><p>Gestione Commesse</p><p>Magazzino</p></div>
+        </div>
+        <div class="header-actions">
+          <div class="sync-bar" onclick="loadFromCloud()" title="Clicca per aggiornare">
+            <span class="sync-dot ${syncStatus==='ok'?'sync-ok':syncStatus==='loading'?'sync-loading':'sync-error'}"></span>
+            ${syncStatus==='ok'?'Sincronizzato':syncStatus==='loading'?'Sincronizzazione...':'Offline'}
+          </div>
+          ${isAdmin?`<span class="admin-badge" onclick="logout()" title="Clicca per uscire">🔓 Admin</span>`:`<span class="login-badge" onclick="showPwModal=true;pwError='';render()">🔒 Login</span>`}
+          <div class="filters">
+            <button class="filter-btn ${filterStato==='ALL'?'active':''}" style="${filterStato==='ALL'?'background:#78909C;color:#fff':''}" onclick="filterStato='ALL';render()">Tutti</button>
+            ${Object.entries(STATI).map(([k,v])=>`<button class="filter-btn ${filterStato===k?'active':''}" style="${filterStato===k?'background:'+v.color:''}" onclick="filterStato='${k}';render()">${v.label}</button>`).join('')}
+          </div>
+          ${isAdmin?`<button class="btn-new" onclick="showForm=true;editingId=null;formData={descrizione:'',operatore:'Leandro',stato:'TODO',note:''};render()">+ Nuova</button>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="columns">
+      ${OPS.map(op=>{
+        const items=getItems(op);const altroOp=op==='Leandro'?'Andrea':'Leandro';
+        return`
+        <div class="column" ondragover="onColDragOver(event)" ondragenter="onColDragEnter(event,'${op}')" ondrop="onColDrop(event,'${op}')">
+          <div class="col-header">
+            <div class="col-left">
+              <div class="col-avatar ${op.toLowerCase()}">${op[0]}</div>
+              <div class="col-info"><h2>${op}</h2><p>${commesse.filter(c=>c.operatore===op).length} commesse</p></div>
+            </div>
+            <div class="badges">
+              ${[{s:'TODO',c:'#F59E0B'},{s:'PROGRESS',c:'#3B82F6'},{s:'DONE',c:'#10B981'}].map(b=>{const n=countBy(op,b.s);return n>0?`<span class="badge" style="background:${b.c}18;color:${b.c}">${n}</span>`:'';}).join('')}
+            </div>
+          </div>
+          <div class="cards">
+            ${items.length===0?`<div class="empty-col">${dragId?'🎯 Rilascia qui':'Nessuna commessa'}</div>`:items.map(c=>{
+              const stato=STATI[c.stato];const hasNote=c.note&&c.note.trim().length>0;const noteOpen=expandedNote===c.id;
+              return`
+              <div class="card ${isAdmin?'admin-card':''}" id="card-${c.id}" ${isAdmin?`draggable="true" ondragstart="onCardDragStart(event,'${c.id}','${op}')" ondragend="onCardDragEnd(event)" ondragover="onCardDragOver(event,'${c.id}')" ondragleave="onCardDragLeave(event,'${c.id}')"`:''}  style="border-left:3px solid ${stato.color}">
+                <div class="card-top">
+                  <div class="card-desc">${esc(c.descrizione)}</div>
+                  ${isAdmin?`<div class="card-actions">
+                    <button class="btn-icon" onclick="startEdit('${c.id}')">✏️</button>
+                    ${confirmDelete===c.id?`<button class="btn-icon confirm-del" onclick="deleteItem('${c.id}')">OK</button>`:`<button class="btn-icon" onclick="confirmDelete='${c.id}';render()">🗑️</button>`}
+                  </div>`:''}
+                </div>
+                ${hasNote?`<div class="note-block" onclick="expandedNote=${noteOpen?'null':"'"+c.id+"'"};render()">
+                  <div class="note-header"><span style="font-size:11px">📝</span><span class="note-label">Note</span><span class="note-toggle">${noteOpen?'▲':'▼'}</span></div>
+                  ${noteOpen?`<div class="note-text">${esc(c.note)}</div>`:''}
+                </div>`:''}
+                <div class="card-bottom">
+                  <div class="status-btns">
+                    ${Object.entries(STATI).map(([k,v])=>`<button class="status-btn ${c.stato===k?'active':''}" style="${c.stato===k?'background:'+v.color:''}" onclick="changeStato('${c.id}','${k}')">${v.label}</button>`).join('')}
+                  </div>
+                  ${isAdmin?`<button class="move-btn" onclick="moveTo('${c.id}','${altroOp}')">→ ${altroOp}</button>`:''}
+                </div>
+                ${c.creata?`<div class="card-time">${esc(c.creata)}</div>`:''}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${showForm&&isAdmin?`
+    <div class="modal-overlay" onclick="showForm=false;render()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>${editingId?'Modifica commessa':'Nuova commessa'}</h3>
+        <div class="form-group">
+          <label class="form-label">Descrizione lavoro</label>
+          <textarea class="form-input" id="f-desc" rows="3" placeholder="Es: Preparare spedizione ordine #1234...">${esc(formData.descrizione)}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📝 Note aggiuntive <span class="form-label-opt">(opzionale)</span></label>
+          <textarea class="form-input form-input-note" id="f-note" rows="2" placeholder="Dettagli extra, istruzioni, riferimenti...">${esc(formData.note)}</textarea>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="form-label">Assegna a</label>
+            <div class="assign-btns">
+              ${OPS.map(op=>`<button class="assign-btn ${formData.operatore===op?'active':''} ${op.toLowerCase()}" onclick="formData.operatore='${op}';render()">${op}</button>`).join('')}
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Stato</label>
+            <div class="stato-btns">
+              ${Object.entries(STATI).map(([k,v])=>`<button class="stato-btn-form ${formData.stato===k?'active':''}" style="${formData.stato===k?'background:'+v.color:''}" onclick="formData.stato='${k}';render()">${v.label}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="showForm=false;render()">Annulla</button>
+          <button class="btn-submit" onclick="addCommessa()">${editingId?'Salva':'🔔 Aggiungi'}</button>
+        </div>
+      </div>
+    </div>`:''}
+    ${showPwModal&&!isAdmin?`
+    <div class="modal-overlay" onclick="showPwModal=false;render()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>🔒 Accesso Admin</h3>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="pw-input" id="pw-input" placeholder="Inserisci password..." onkeydown="if(event.key==='Enter')tryLogin()">
+          ${pwError?`<div class="pw-error">${pwError}</div>`:''}
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="showPwModal=false;render()">Annulla</button>
+          <button class="btn-submit" onclick="tryLogin()">Accedi</button>
+        </div>
+      </div>
+    </div>`:''}
+  `;
+  if(showForm){const el=document.getElementById('f-desc');if(el)el.focus();}
+  if(showPwModal){const el=document.getElementById('pw-input');if(el)el.focus();}
+}
+
+loadFromCloud();
+</script>
+</body>
+</html>
